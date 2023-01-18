@@ -1,11 +1,11 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: AWS CloudFormation Template to deploy insecure infrastructure
 Parameters:
   CompanyName:
     Description: Company Name
     Type: String
     Default: acme
-  Environment: 
+  Environment:
     Description: Environment
     Type: String
     Default: dev
@@ -13,8 +13,8 @@ Parameters:
     Description: Name of the Database
     Type: String
     Default: db1
-  Password: 
-    Description: Database Password 
+  Password:
+    Description: Database Password
     Type: String
     NoEcho: True
     MinLength: 1
@@ -31,19 +31,19 @@ Resources:
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      AvailabilityZone: 
+      AvailabilityZone:
         Fn::Select:
-        - 0
-        - Fn::GetAZs: ""
+          - 0
+          - Fn::GetAZs: ""
       InstanceType: t2.nano
-      SecurityGroupIds: 
+      SecurityGroupIds:
         - !Ref WebNodeSG
       ImageId: !Ref LatestAmiId
       SubnetId: !Ref WebSubnet
-      Tags: 
+      Tags:
         - Key: Name
-          Value: !Sub "${AWS::AccountId}-${CompanyName}-${Environment}-ec2" 
-      UserData: 
+          Value: !Sub "${AWS::AccountId}-${CompanyName}-${Environment}-ec2"
+      UserData:
         Fn::Base64: |
           #!/bin/bash
           sudo yum -y update
@@ -54,7 +54,6 @@ Resources:
           export AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMAAAKEY
           export AWS_DEFAULT_REGION=us-west-2
           echo "<h1>Deployed via CloudFormation</h1>" | sudo tee /var/www/html/index.html
-    
 
   ############
   ###  S3  ###
@@ -72,7 +71,7 @@ Resources:
         - Key: Name
           Value: !Sub "${AWS::AccountId}-${CompanyName}-${Environment}-data"
 
-  DataBucket:
+  DataBucket2:
     # Public, not encrypted, no access logs, no versioning
     # checkov:skip=CKV_AWS_56: not needed
     Type: AWS::S3::Bucket
@@ -89,19 +88,19 @@ Outputs:
     Description: Web Host Public DNS Name
     Value: !GetAtt [EC2Instance, PublicDnsName]
   VpcId:
-    Description: The ID of the VPC 
+    Description: The ID of the VPC
     Value: !Ref WebVPC
   PublicSubnet:
     Description: The ID of the Public Subnet
     Value: !Ref WebSubnet
-  PublicSubnet2: 
+  PublicSubnet2:
     Description: The ID of the Public Subnet
     Value: !Ref WebSubnet2
 
   UserName:
     Description: The Name of the IAM User
     Value: !Ref User
-  SecretKey: 
+  SecretKey:
     Description: The Secret Key of the IAM User
     Value: !GetAtt AccessKey.SecretAccessKey
 
@@ -109,6 +108,5 @@ Outputs:
     Description: DB App Public DNS Name
     Value: !GetAtt [DBAppInstance, PublicDnsName]
   DBEndpoint:
-    Description: DB Endpoint 
+    Description: DB Endpoint
     Value: !Sub ${DefaultDB.Endpoint.Address}:{DefaultDB.Endpoint.Port}
-
